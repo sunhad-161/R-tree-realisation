@@ -51,6 +51,8 @@ public:
 
 	Joint(int* a): Joint(a[0], a[1]) {}
 
+	Joint() : Joint(0, 0) {}
+
 	void SetChild(Joint* a){
 		if (child[0] == NULL) child[0] = a;
 		else child[1] = a;
@@ -76,11 +78,6 @@ public:
 	bool Inside(Joint other) {
 		if (rect[0][0] <= other.rect[0][0] && rect[0][1] <= other.rect[0][1] && rect[1][0] >= other.rect[0][0] && rect[1][1] >= other.rect[0][1]) return true;
 		else return false;
-	}
-
-	Joint Copy() {
-		Joint A(rect[0][0], rect[0][1], rect[1][0], rect[1][1]);
-		return A;
 	}
 };
 
@@ -119,22 +116,22 @@ public:
 			int depth = 1;
 			Joint* cur_j = root;
 			do {
-				Joint A = cur_j->Copy();
+				Joint* A = new Joint(cur_j->GetCoords());
 				if (cur_j->rect[0][0] > new_j->rect[0][0]) cur_j->rect[0][0] = new_j->rect[0][0];
 				if (cur_j->rect[0][1] > new_j->rect[0][1]) cur_j->rect[0][1] = new_j->rect[0][1];
 				if (cur_j->rect[1][0] < new_j->rect[1][0]) cur_j->rect[1][0] = new_j->rect[1][0];
 				if (cur_j->rect[1][1] < new_j->rect[1][1]) cur_j->rect[1][1] = new_j->rect[1][1];
 
 				if (cur_j->leaf) {
-					cur_j->child[1] = &A;
+					cur_j->child[1] = A;
 					cur_j->child[0] = new_j;
 					cur_j->leaf = false;
 					if (size == depth) size++;
 					break;
 				} else {
+					// if (*cur_j->child[1].Inside(new_j))
 					if (Distance(*new_j, *cur_j->child[0]) <= Distance(*new_j, *cur_j->child[1])) cur_j = cur_j->child[0];
 					else cur_j = cur_j->child[1];
-					// cur_j = Closest(cur_j->child[0], cur_j->child[1], new_j);
 					depth++;
 				}
 			} while (depth <= size);
