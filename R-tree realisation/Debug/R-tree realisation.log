@@ -1,0 +1,3 @@
+﻿  Source.cpp
+C:\Users\sunha\source\repos\R-tree realisation\Source.cpp(101,14): warning C4244: return: преобразование "double" в "int", возможна потеря данных
+  R-tree realisation.vcxproj -> C:\Users\sunha\source\repos\R-tree realisation\Debug\R-tree realisation.exe
