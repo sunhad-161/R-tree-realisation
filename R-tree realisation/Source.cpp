@@ -2,6 +2,7 @@
 #include <vector>
 #include <fstream>
 #include <string>
+#include <sstream>
 
 using namespace std;
 
@@ -79,6 +80,11 @@ public:
 		if (rect[0][0] <= other.rect[0][0] && rect[0][1] <= other.rect[0][1] && rect[1][0] >= other.rect[0][0] && rect[1][1] >= other.rect[0][1]) return true;
 		else return false;
 	}
+
+	bool Equal(Joint other) {
+		if (rect[0][0] == other.rect[0][0] && rect[0][1] == other.rect[0][1] && rect[1][0] == other.rect[1][0] && rect[1][1] == other.rect[1][1]) return true;
+		else return false;
+	}
 };
 
 int Distance(Joint d, Joint j) {
@@ -138,6 +144,31 @@ public:
 		}
 	}
 
+	bool Find(Joint f) {
+		if (size == 0) return false;
+		else {
+			Joint* cur_j = root;
+			if (cur_j->Equal(f)) return true;
+			do {
+				if (f.Inside(*cur_j->child[0])) cur_j = cur_j->child[0];
+				else if (f.Inside(*cur_j->child[1])) cur_j = cur_j->child[1];
+				else return false;
+				if (cur_j->Equal(f)) return true;
+			} while (not cur_j->leaf);
+		}
+		return false;
+	}
+
+	void Delete(Joint f) {
+		Joint* cur_j = root;
+		if (cur_j->Equal(f)) ; //del
+		do {
+			if (f.Inside(*cur_j->child[0])) cur_j = cur_j->child[0];
+			else if (f.Inside(*cur_j->child[1])) cur_j = cur_j->child[1];
+			if (cur_j->Equal(f)) ; //del
+		} while (not cur_j->leaf);
+	}
+
 	void WriteTree() {
 		cout << "size of tree: " << size << endl;
 		if (size > 0) root->WriteCoords("r");
@@ -160,14 +191,21 @@ void MakeTree() {
 
 	tree.Insert(&A);
 	tree.Insert(&B);
-	tree.WriteTree();
-
 	tree.Insert(&C);
 	tree.Insert(&D);
 	tree.WriteTree();
+
+	if (tree.Find(Joint(1, 1, 2, 2))) cout << "OK" << endl;
+	else cout << "NOT FOUND" << endl;
+	if (tree.Find(Joint(1, 1, 2, 3))) cout << "OK" << endl;
+	else cout << "NOT FOUND" << endl;
+
+
 }
 
 bool Check() {
+
+
 	return true;
 }
 
@@ -181,7 +219,7 @@ void Test() {
 
 	if (in.is_open()) {
 
-		while (getline(in, line)) {
+		while (getline(in, line)) {	
 			input.push_back(line);
 		}
 	}
@@ -192,11 +230,15 @@ void Test() {
 	out.open("output.txt");
 	
 	if (out.is_open()) {
-		if (input[0] == "1 2" && input[1] == "4 3") {
-			out << "size of tree: 2" << endl;
-			out << "r (1, 2) (5, 4)" << endl;
-			out << "rL (1, 2) (2, 3)" << endl;
-			out << "rR (4, 3) (5, 4)" << endl;
+		for (int i = 0; i < input.size(); i++) {
+			stringstream ss;
+			ss << input[i];
+
+			vector<int> out_data;
+			for (int i = 0; ss >> i; )
+			{
+				out_data.push_back(i);
+			}
 		}
 	}
 
@@ -207,7 +249,7 @@ void Test() {
 }
 
 int main(){
-	// MakeTree();
+	MakeTree();
 	// Test();
 
 	return 0;
