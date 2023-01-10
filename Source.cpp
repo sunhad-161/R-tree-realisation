@@ -172,7 +172,12 @@ public:
 	}
 
 	void del(int n) {
-		// delete joint #n
+		while (n > 1) {
+			int p = n % 2;
+			n /= 2;
+			if (p) cout << "R";
+			else cout << "L";
+		}
 	}
 
 	void WriteTree() {
@@ -206,7 +211,9 @@ void MakeTree() {
 	if (tree.Find(Joint(1, 1, 2, 3))) cout << "OK" << endl;
 	else cout << "NOT FOUND" << endl;
 
+	cout << endl;
 
+	tree.Delete(Joint(1, 1, 2, 2));
 }
 
 bool Check() {
