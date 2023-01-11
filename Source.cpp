@@ -77,13 +77,11 @@ public:
 	}
 
 	bool Inside(Joint other) {
-		if (rect[0][0] <= other.rect[0][0] && rect[0][1] <= other.rect[0][1] && rect[1][0] >= other.rect[0][0] && rect[1][1] >= other.rect[0][1]) return true;
-		else return false;
+		return rect[0][0] >= other.rect[0][0] && rect[0][1] >= other.rect[0][1] && rect[1][0] <= other.rect[1][0] && rect[1][1] <= other.rect[1][1];
 	}
 
 	bool Equal(Joint other) {
-		if (rect[0][0] == other.rect[0][0] && rect[0][1] == other.rect[0][1] && rect[1][0] == other.rect[1][0] && rect[1][1] == other.rect[1][1]) return true;
-		else return false;
+		return rect[0][0] == other.rect[0][0] && rect[0][1] == other.rect[0][1] && rect[1][0] == other.rect[1][0] && rect[1][1] == other.rect[1][1];
 	}
 };
 
@@ -178,6 +176,7 @@ public:
 			if (p) cout << "R";
 			else cout << "L";
 		}
+		cout << endl;
 	}
 
 	void WriteTree() {
@@ -195,7 +194,7 @@ Joint* Closest(Joint* A, Joint* B, Joint* c) {
 void MakeTree() {
 
 	RTree tree;
-	Joint A(1, 1);
+	Joint A(10, 10);
 	Joint B(3, 5);
 	Joint C(4, 2);
 	Joint D(3, 6);
@@ -208,12 +207,17 @@ void MakeTree() {
 
 	if (tree.Find(Joint(1, 1, 2, 2))) cout << "OK" << endl;
 	else cout << "NOT FOUND" << endl;
+	if (tree.Find(Joint(3, 5, 4, 7))) cout << "OK" << endl;
+	else cout << "NOT FOUND" << endl;
 	if (tree.Find(Joint(1, 1, 2, 3))) cout << "OK" << endl;
 	else cout << "NOT FOUND" << endl;
 
 	cout << endl;
 
-	tree.Delete(Joint(1, 1, 2, 2));
+	tree.Delete(Joint(10, 10));
+	tree.Delete(Joint(3, 5));
+	tree.Delete(Joint(4, 2));
+	tree.Delete(Joint(3, 6));
 }
 
 bool Check() {
