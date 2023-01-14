@@ -70,10 +70,8 @@ public:
 	void WriteCoords(string name) {
 		int* a = this->GetCoords();
 		cout << name << ": (" << a[0] << ", " << a[1] << "), (" << a[2] << ", " << a[3] << ")" << endl;
-		if (not this->leaf) {
-			child[0]->WriteCoords(name + "L");
-			child[1]->WriteCoords(name + "R");
-		}
+		if (child[0] != nullptr) child[0]->WriteCoords(name + "L");
+		if (child[1] != nullptr) child[1]->WriteCoords(name + "R");
 	}
 
 	bool Inside(Joint other) {
@@ -170,12 +168,17 @@ public:
 	}
 
 	void del(int n) {
+		vector<bool> path;
+
 		while (n > 1) {
 			int p = n % 2;
 			n /= 2;
-			if (p) cout << "R";
-			else cout << "L";
+			path.push_back(p);
 		}
+		int s = path.size();
+		Joint* cur_j = root;
+		for (int i = s - 1; i >= 1; i--) cur_j = cur_j->child[path[i]];
+		cur_j->child[path[0]] = nullptr;
 		cout << endl;
 	}
 
@@ -215,9 +218,8 @@ void MakeTree() {
 	cout << endl;
 
 	tree.Delete(Joint(10, 10));
-	tree.Delete(Joint(3, 5));
-	tree.Delete(Joint(4, 2));
-	tree.Delete(Joint(3, 6));
+	tree.WriteTree();
+
 }
 
 bool Check() {
