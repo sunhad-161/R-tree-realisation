@@ -3,6 +3,8 @@
 #include <fstream>
 #include <string>
 #include <sstream>
+#include <regex>
+#include <typeinfo>
 
 using namespace std;
 
@@ -29,6 +31,20 @@ bool Between(int* l, int x) {
 	return l[0] <= x && x <= l[1];
 }
 
+int* split(string& s, char delimeter)
+{
+	stringstream ss(s);
+	string item;
+	int tokens[4];
+	int i = 0;
+	while (getline(ss, item, delimeter))
+	{
+		tokens[i] = stoi(item);
+		i++;
+	}
+	return tokens;
+}
+
 class Joint {
 
 public:
@@ -48,7 +64,9 @@ public:
 		leaf = true;
 	}
 
-	Joint(int x, int y): Joint(x, y, x + 1, y + 1) {}
+	Joint(int x, int y): Joint(x, y, x, y) {}
+
+	// Joint(int* a): Joint(a[0], a[1], a[2], a[3]) {}
 
 	Joint(int* a): Joint(a[0], a[1]) {}
 
@@ -69,21 +87,18 @@ public:
 
 	void WriteCoords(string name) {
 		int* a = this->GetCoords();
-		cout << name << ": (" << a[0] << ", " << a[1] << "), (" << a[2] << ", " << a[3] << ")" << endl;
-		if (not this->leaf) {
-			child[0]->WriteCoords(name + "L");
-			child[1]->WriteCoords(name + "R");
-		}
+		if (a[0] == a[2] && a[1] == a[3]) cout << name << ": p(" << a[0] << ", " << a[1] << ")" << endl;
+		else cout << name << ": (" << a[0] << ", " << a[1] << "), (" << a[2] << ", " << a[3] << ")" << endl;
+		if (child[0] != nullptr) child[0]->WriteCoords(name + "L");
+		if (child[1] != nullptr) child[1]->WriteCoords(name + "R");
 	}
 
 	bool Inside(Joint other) {
-		if (rect[0][0] <= other.rect[0][0] && rect[0][1] <= other.rect[0][1] && rect[1][0] >= other.rect[0][0] && rect[1][1] >= other.rect[0][1]) return true;
-		else return false;
+		return rect[0][0] >= other.rect[0][0] && rect[0][1] >= other.rect[0][1] && rect[1][0] <= other.rect[1][0] && rect[1][1] <= other.rect[1][1];
 	}
 
 	bool Equal(Joint other) {
-		if (rect[0][0] == other.rect[0][0] && rect[0][1] == other.rect[0][1] && rect[1][0] == other.rect[1][0] && rect[1][1] == other.rect[1][1]) return true;
-		else return false;
+		return rect[0][0] == other.rect[0][0] && rect[0][1] == other.rect[0][1] && rect[1][0] == other.rect[1][0] && rect[1][1] == other.rect[1][1];
 	}
 };
 
@@ -144,29 +159,46 @@ public:
 		}
 	}
 
-	bool Find(Joint f) {
-		if (size == 0) return false;
+	int Find(Joint f) {
+		int index = 1;
+		if (size == 0) return 0;
 		else {
 			Joint* cur_j = root;
-			if (cur_j->Equal(f)) return true;
+			if (cur_j->Equal(f)) return index;
 			do {
-				if (f.Inside(*cur_j->child[0])) cur_j = cur_j->child[0];
-				else if (f.Inside(*cur_j->child[1])) cur_j = cur_j->child[1];
-				else return false;
-				if (cur_j->Equal(f)) return true;
+				if (f.Inside(*cur_j->child[0])) {
+					cur_j = cur_j->child[0];
+					index = 2 * index + 0;
+				}
+				else if (f.Inside(*cur_j->child[1])) {
+					cur_j = cur_j->child[1];
+					index = 2 * index + 1;
+				} else return 0;
+				if (cur_j->Equal(f)) return index;
 			} while (not cur_j->leaf);
 		}
-		return false;
+		return 0;
 	}
 
 	void Delete(Joint f) {
+		int tmp = this->Find(f);
+		if (!tmp) cout << "Error: joint not found" << endl;
+		else this->del(tmp);
+	}
+
+	void del(int n) {
+		vector<bool> path;
+
+		while (n > 1) {
+			int p = n % 2;
+			n /= 2;
+			path.push_back(p);
+		}
+		int s = path.size();
 		Joint* cur_j = root;
-		if (cur_j->Equal(f)) ; //del
-		do {
-			if (f.Inside(*cur_j->child[0])) cur_j = cur_j->child[0];
-			else if (f.Inside(*cur_j->child[1])) cur_j = cur_j->child[1];
-			if (cur_j->Equal(f)) ; //del
-		} while (not cur_j->leaf);
+		for (int i = s - 1; i >= 1; i--) cur_j = cur_j->child[path[i]];
+		cur_j->child[path[0]] = nullptr;
+		cout << endl;
 	}
 
 	void WriteTree() {
@@ -195,11 +227,17 @@ void MakeTree() {
 	tree.Insert(&D);
 	tree.WriteTree();
 
-	if (tree.Find(Joint(1, 1, 2, 2))) cout << "OK" << endl;
+	if (tree.Find(Joint(1, 1))) cout << "OK" << endl;
 	else cout << "NOT FOUND" << endl;
-	if (tree.Find(Joint(1, 1, 2, 3))) cout << "OK" << endl;
+	if (tree.Find(Joint(3, 5, 3, 6))) cout << "OK" << endl;
+	else cout << "NOT FOUND" << endl;
+	if (tree.Find(Joint(2, 3))) cout << "OK" << endl;
 	else cout << "NOT FOUND" << endl;
 
+	cout << endl;
+
+	tree.Delete(Joint(1, 1));
+	tree.WriteTree();
 
 }
 
@@ -214,43 +252,81 @@ void Test() {
 	int test = 1;
 	string line = "";
 	ifstream in;
+
+	in.open("input.txt");
+	getline(in, line);
+	int max_test = stoi(line);
+	in.close();
+
+	for (; test <= max_test; test++) {
+
+		in.open("input.txt");
+		vector <string> input;
+
+		if (in.is_open()) {
+
+			while (getline(in, line)) {
+				input.push_back(line);
+			}
+		}
+
+		in.close();
+
+		ofstream out;
+		out.open("output.txt");
+
+		if (out.is_open()) {
+			for (int i = 0; i < input.size(); i++) {
+				stringstream ss;
+				ss << input[i];
+
+				vector<int> out_data;
+				for (int i = 0; ss >> i; )
+				{
+					out_data.push_back(i);
+				}
+			}
+		}
+
+		out.close();
+
+		if (Check()) cout << "test " << test << " OK" << endl;
+		else cout << "test " << test << " FAIL" << endl;
+	}
+}
+
+void Simple_test() {
+	string line = "";
+	ifstream in;
 	in.open("input.txt");
 	vector <string> input;
 
 	if (in.is_open()) {
 
-		while (getline(in, line)) {	
+		while (getline(in, line)) {
 			input.push_back(line);
 		}
 	}
 
-	in.close();
+	RTree tree;
 
-	ofstream out;
-	out.open("output.txt");
-	
-	if (out.is_open()) {
-		for (int i = 0; i < input.size(); i++) {
-			stringstream ss;
-			ss << input[i];
+	for (string i: input) {
+		int* numbers = split(i, ' ');
 
-			vector<int> out_data;
-			for (int i = 0; ss >> i; )
-			{
-				out_data.push_back(i);
-			}
-		}
+		int a = numbers[0];
+		int b = numbers[1];
+
+		Joint* A = new Joint(a, b);
+		tree.Insert(A);
 	}
 
-	out.close();
-
-	if (Check()) cout << "test " << test << " OK" << endl;
-	else cout << "test " << test << " FAIL" << endl;
+	tree.WriteTree();
 }
 
 int main(){
 	MakeTree();
 	// Test();
+	// Simple_test();
 
 	return 0;
 }
